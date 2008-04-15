@@ -1,10 +1,10 @@
-# $Id: /mirror/coderepos/lang/perl/Crypt-DH-GMP/trunk/lib/Crypt/DH/GMP.pm 50361 2008-04-15T02:03:48.351360Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Crypt-DH-GMP/trunk/lib/Crypt/DH/GMP.pm 50372 2008-04-15T06:01:13.149121Z daisuke  $
 
 package Crypt::DH::GMP;
 use strict;
 use warnings;
 use vars qw($VERSION @ISA);
-$VERSION = '0.00002';
+$VERSION = '0.00003';
 
 eval {
     require XSLoader;
@@ -28,7 +28,7 @@ sub new
 {
     my $class = shift;
     my %args  = @_;
-    $class->_xs_new($args{p}, $args{g}, $args{priv_key} || '');
+    $class->_xs_new($args{p} || "0", $args{g} || "0", $args{priv_key} || '');
 }
 
 *compute_secret = \&compute_key;

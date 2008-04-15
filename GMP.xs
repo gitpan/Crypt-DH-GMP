@@ -9,16 +9,16 @@
 #include "dh_gmp.h"
 
 static
-void DH_mpz_rand_set(mpz_t *v)
+void DH_mpz_rand_set(mpz_t *v, unsigned int bits)
 {
     gmp_randstate_t state;
     gmp_randinit_default(state);
     gmp_randseed_ui(state, (unsigned long) time(NULL));
-    mpz_urandomb(*v, state, 32);
+    mpz_urandomb(*v, state, bits);
     gmp_randclear(state);
 }
 
-static
+static inline
 char *DH_mpz2sv_str(mpz_t *v)
 {
     STRLEN len;
@@ -58,8 +58,7 @@ DH_gmp__xs_new(class, p, g, priv_key = NULL)
         if (priv_key != NULL && sv_len(ST(3)) > 0) {
             mpz_init_set_str(ptr->priv_key, priv_key, 10);
         } else {
-            mpz_init(ptr->priv_key);
-            DH_mpz_rand_set(&(ptr->priv_key));
+            mpz_init_set_ui(ptr->priv_key, 0);
         } 
 
         RETVAL = ptr;
@@ -70,8 +69,18 @@ void
 DH_gmp_generate_keys(dh)
         DH_gmp_t *dh;
     CODE:
+        if (mpz_cmp_ui(dh->priv_key, 0) == 0) {
+            mpz_t max;
+
+            /* not initialized, eh? */
+            mpz_init(max);
+            mpz_sub_ui(max, dh->p, 1);
+            do {
+                DH_mpz_rand_set(&(dh->priv_key), mpz_sizeinbase(dh->p, 2));
+            } while ( mpz_cmp(dh->priv_key, max) > 0 );
+        }
+            
         mpz_powm( dh->pub_key, dh->g, dh->priv_key, dh->p );
-        
 
 char *
 DH_gmp_compute_key(dh, pub_key)
@@ -107,18 +116,28 @@ DH_gmp_pub_key(dh)
         RETVAL
 
 char *
-DH_gmp_g(dh)
+DH_gmp_g(dh, ...)
         DH_gmp_t *dh;
+    PREINIT:
+        STRLEN n_a;
     CODE:
         RETVAL = DH_mpz2sv_str(&( dh->g ));
+        if (items > 1) {
+            mpz_init_set_str( dh->g, (char *) SvPV(ST(1), n_a), 0 );
+        }
     OUTPUT:
         RETVAL
 
 char *
-DH_gmp_p(dh)
+DH_gmp_p(dh, ...)
         DH_gmp_t *dh;
+    PREINIT:
+        STRLEN n_a;
     CODE:
         RETVAL = DH_mpz2sv_str(&( dh->p ));
+        if (items > 1) {
+            mpz_init_set_str( dh->p, (char *) SvPV(ST(1), n_a), 0 );
+        }
     OUTPUT:
         RETVAL
 

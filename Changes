@@ -1,6 +1,12 @@
 Changes
 =======
 
+0.00003 - 15 Apr 2008
+  - Make g() and p() both getter /and/ setter
+  - Properly initialize priv_key if nothing was given in the constructor
+    (Net::SSH::Perl uses Crypt::DH this way)
+  - Update benchmarks
+
 0.00002 - 15 Apr 2008
   - Fix t/99-compat.t so that it properly detectes Crypt::DH
   - Fix warnings about incompatible pointer types

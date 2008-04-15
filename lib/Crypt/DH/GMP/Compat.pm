@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Crypt-DH-GMP/trunk/lib/Crypt/DH/GMP/Compat.pm 50337 2008-04-14T14:57:52.111907Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Crypt-DH-GMP/trunk/lib/Crypt/DH/GMP/Compat.pm 50370 2008-04-15T05:54:58.881985Z daisuke  $
 
 package Crypt::DH::GMP::Compat;
 
@@ -15,12 +15,24 @@ BEGIN
     unshift @ISA, 'Crypt::DH::GMP';
 
     *Crypt::DH::new = sub { shift->SUPER::new(@_) };
-    *Crypt::DH::g = sub { Math::BigInt->new(shift->SUPER::g(@_)) };
-    *Crypt::DH::p = sub { Math::BigInt->new(shift->SUPER::p(@_)) };
+    *Crypt::DH::g = sub {
+        my $self = shift;
+        if (@_) {
+            $_[0] = ref $_[0] ? $_[0]->bstr : $_[0];
+        }
+        return Math::BigInt->new( $self->SUPER::g(@_) );
+    };
+    *Crypt::DH::p = sub { 
+        my $self = shift;
+        if (@_) {
+            $_[0] = ref $_[0] ? $_[0]->bstr : $_[0];
+        }
+        return Math::BigInt->new($self->SUPER::p(@_))
+    };
     *Crypt::DH::pub_key = sub { Math::BigInt->new(shift->SUPER::pub_key(@_)) };
     *Crypt::DH::priv_key = sub { Math::BigInt->new(shift->SUPER::priv_key(@_)) };
-    *Crypt::DH::generate_keys = sub { shift->SUPER::generate_keys(@_) };
-    *Crypt::DH::compute_key = sub { shift->SUPER::compute_key(@_) };
+    *Crypt::DH::generate_keys = \&Crypt::DH::GMP::generate_keys;
+    *Crypt::DH::compute_key = \&Crypt::DH::GMP::compute_key;
     *Crypt::DH::compute_secret = \&Crypt::DH::compute_key;
 }
 
