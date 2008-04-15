@@ -1,5 +1,10 @@
 Changes
 =======
 
-0.00001
+0.00002 - 15 Apr 2008
+  - Fix t/99-compat.t so that it properly detectes Crypt::DH
+  - Fix warnings about incompatible pointer types
+  - Add mpz_clear() calls prior to calling free
+
+0.00001 - 14 Apr 2008
   - Initial release

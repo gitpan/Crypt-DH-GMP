@@ -59,7 +59,7 @@ DH_gmp__xs_new(class, p, g, priv_key = NULL)
             mpz_init_set_str(ptr->priv_key, priv_key, 10);
         } else {
             mpz_init(ptr->priv_key);
-            DH_mpz_rand_set(ptr->priv_key);
+            DH_mpz_rand_set(&(ptr->priv_key));
         } 
 
         RETVAL = ptr;
@@ -126,5 +126,9 @@ void
 DESTROY(dh)
         DH_gmp_t *dh;
     CODE:
+        mpz_clear(dh->p);
+        mpz_clear(dh->g);
+        mpz_clear(dh->pub_key);
+        mpz_clear(dh->priv_key);
         Safefree(dh);
         
