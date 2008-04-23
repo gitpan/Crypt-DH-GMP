@@ -8,6 +8,16 @@
 
 #include "dh_gmp.h"
 
+#define DH_G(x)       *((x)->g)
+#define DH_P(x)       *((x)->p)
+#define DH_PRIVKEY(x) *((x)->priv_key)
+#define DH_PUBKEY(x)  *((x)->pub_key)
+
+#define DH_G_PTR(x)       (x)->g
+#define DH_P_PTR(x)       (x)->p
+#define DH_PRIVKEY_PTR(x) (x)->priv_key
+#define DH_PUBKEY_PTR(x)  (x)->pub_key
+
 static
 void DH_mpz_rand_set(mpz_t *v, unsigned int bits)
 {
@@ -21,12 +31,12 @@ void DH_mpz_rand_set(mpz_t *v, unsigned int bits)
 static inline
 char *DH_mpz2sv_str(mpz_t *v)
 {
-    STRLEN len;
+    STRLEN len = 0;
     char *buf, *buf_end;
 
     /* len is always >= 1, and might be off (greater) by one than real len */
     len = mpz_sizeinbase(*v, 10);
-    Newxz(buf, len, char);
+    Newxz(buf, len + 2, char);
     buf_end = buf + len - 1; /* end of storage (-1) */
     mpz_get_str(buf, 10, *v);
     if (*buf_end == 0) {
@@ -48,20 +58,24 @@ DH_gmp__xs_new(class, p, g, priv_key = NULL)
         char *g;
         char *priv_key;
     PREINIT:
-        DH_gmp_t *ptr;
+        DH_gmp_t *dh;
     CODE:
-        Newxz(ptr, 1, DH_gmp_t);
+        Newxz(dh, 1, DH_gmp_t);
+        Newxz(DH_P_PTR(dh),       1, mpz_t);
+        Newxz(DH_G_PTR(dh),       1, mpz_t);
+        Newxz(DH_PRIVKEY_PTR(dh), 1, mpz_t);
+        Newxz(DH_PUBKEY_PTR(dh),  1, mpz_t);
 
-        mpz_init(ptr->pub_key);
-        mpz_init_set_str(ptr->p, p, 0);
-        mpz_init_set_str(ptr->g, g, 0);
+        mpz_init(DH_PUBKEY(dh));
+        mpz_init_set_str(DH_P(dh), p, 0);
+        mpz_init_set_str(DH_G(dh), g, 0);
         if (priv_key != NULL && sv_len(ST(3)) > 0) {
-            mpz_init_set_str(ptr->priv_key, priv_key, 10);
+            mpz_init_set_str(DH_PRIVKEY(dh), priv_key, 10);
         } else {
-            mpz_init_set_ui(ptr->priv_key, 0);
+            mpz_init_set_ui(DH_PRIVKEY(dh), 0);
         } 
 
-        RETVAL = ptr;
+        RETVAL = dh;
     OUTPUT:
         RETVAL
 
@@ -69,18 +83,18 @@ void
 DH_gmp_generate_keys(dh)
         DH_gmp_t *dh;
     CODE:
-        if (mpz_cmp_ui(dh->priv_key, 0) == 0) {
+        if (mpz_cmp_ui(DH_PRIVKEY(dh), 0) == 0) {
             mpz_t max;
 
             /* not initialized, eh? */
             mpz_init(max);
-            mpz_sub_ui(max, dh->p, 1);
+            mpz_sub_ui(max, DH_P(dh), 1);
             do {
-                DH_mpz_rand_set(&(dh->priv_key), mpz_sizeinbase(dh->p, 2));
-            } while ( mpz_cmp(dh->priv_key, max) > 0 );
+                DH_mpz_rand_set(DH_PRIVKEY_PTR(dh), mpz_sizeinbase(DH_P(dh), 2));
+            } while ( mpz_cmp(DH_PRIVKEY(dh), max) > 0 );
         }
             
-        mpz_powm( dh->pub_key, dh->g, dh->priv_key, dh->p );
+        mpz_powm( DH_PUBKEY(dh), DH_G(dh), DH_PRIVKEY(dh), DH_P(dh) );
 
 char *
 DH_gmp_compute_key(dh, pub_key)
@@ -92,7 +106,7 @@ DH_gmp_compute_key(dh, pub_key)
     CODE:
         mpz_init(mpz_ret);
         mpz_init_set_str(mpz_pub_key, pub_key, 0);
-        mpz_powm(mpz_ret, mpz_pub_key, dh->priv_key, dh->p);
+        mpz_powm(mpz_ret, mpz_pub_key, DH_PRIVKEY(dh), DH_P(dh));
         RETVAL = DH_mpz2sv_str(&mpz_ret);
         mpz_clear(mpz_ret);
         mpz_clear(mpz_pub_key);
@@ -103,7 +117,7 @@ char *
 DH_gmp_priv_key(dh)
         DH_gmp_t *dh;
     CODE:
-        RETVAL = DH_mpz2sv_str(&( dh->priv_key ));
+        RETVAL = DH_mpz2sv_str(DH_PRIVKEY_PTR(dh));
     OUTPUT:
         RETVAL
 
@@ -111,7 +125,7 @@ char *
 DH_gmp_pub_key(dh)
         DH_gmp_t *dh;
     CODE:
-        RETVAL = DH_mpz2sv_str(&( dh->pub_key ));
+        RETVAL = DH_mpz2sv_str(DH_PUBKEY_PTR(dh));
     OUTPUT:
         RETVAL
 
@@ -121,9 +135,9 @@ DH_gmp_g(dh, ...)
     PREINIT:
         STRLEN n_a;
     CODE:
-        RETVAL = DH_mpz2sv_str(&( dh->g ));
+        RETVAL = DH_mpz2sv_str(DH_G_PTR(dh));
         if (items > 1) {
-            mpz_init_set_str( dh->g, (char *) SvPV(ST(1), n_a), 0 );
+            mpz_init_set_str( DH_G(dh), (char *) SvPV(ST(1), n_a), 0 );
         }
     OUTPUT:
         RETVAL
@@ -134,9 +148,9 @@ DH_gmp_p(dh, ...)
     PREINIT:
         STRLEN n_a;
     CODE:
-        RETVAL = DH_mpz2sv_str(&( dh->p ));
+        RETVAL = DH_mpz2sv_str(DH_P_PTR(dh));
         if (items > 1) {
-            mpz_init_set_str( dh->p, (char *) SvPV(ST(1), n_a), 0 );
+            mpz_init_set_str( DH_P(dh), (char *) SvPV(ST(1), n_a), 0 );
         }
     OUTPUT:
         RETVAL
@@ -145,9 +159,25 @@ void
 DESTROY(dh)
         DH_gmp_t *dh;
     CODE:
-        mpz_clear(dh->p);
-        mpz_clear(dh->g);
-        mpz_clear(dh->pub_key);
-        mpz_clear(dh->priv_key);
+#ifdef VERY_VERBOSE
+        PerlIO_printf(PerlIO_stderr(), "DH->DESTROY called\n" );
+#endif
+        mpz_clear(DH_P(dh));
+        mpz_clear(DH_G(dh));
+        mpz_clear(DH_PUBKEY(dh));
+        mpz_clear(DH_PRIVKEY(dh));
+#ifdef VERY_VERBOSE
+        PerlIO_printf(PerlIO_stderr(), "cleared mpz_t\n" );
+#endif
+        Safefree(DH_P_PTR(dh));
+        Safefree(DH_G_PTR(dh));
+        Safefree(DH_PRIVKEY_PTR(dh));
+        Safefree(DH_PUBKEY_PTR(dh));
+#ifdef VERY_VERBOSE
+        PerlIO_printf(PerlIO_stderr(), "freed mpz_t\n" );
+#endif
         Safefree(dh);
+#ifdef VERY_VERBOSE
+        PerlIO_printf(PerlIO_stderr(), "DH->DESTROY done\n" );
+#endif
         

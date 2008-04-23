@@ -1,10 +1,10 @@
-# $Id: /mirror/coderepos/lang/perl/Crypt-DH-GMP/trunk/lib/Crypt/DH/GMP.pm 50372 2008-04-15T06:01:13.149121Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Crypt-DH-GMP/trunk/lib/Crypt/DH/GMP.pm 51832 2008-04-23T11:31:04.743764Z daisuke  $
 
 package Crypt::DH::GMP;
 use strict;
 use warnings;
 use vars qw($VERSION @ISA);
-$VERSION = '0.00003';
+$VERSION = '0.00004';
 
 eval {
     require XSLoader;

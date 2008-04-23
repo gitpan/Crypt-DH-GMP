@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.00004 - 23 Apr 2008
+  - Fix an off-by-one error when calling mpz_get_str.
+    This fixes segfaults that seemed to appear only on linux flavours.
+
 0.00003 - 15 Apr 2008
   - Make g() and p() both getter /and/ setter
   - Properly initialize priv_key if nothing was given in the constructor
