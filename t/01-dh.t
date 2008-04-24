@@ -21,19 +21,6 @@ my @pgs = (
            }
            );
 
-=head1
-my $num = '10000000000000000001';
-my @try = ($num, Math::BigInt->new($num));
-push @try, Math::Pari->new($num) if $has_pari;
-for my $try (@try) {
-    my $type = 'any2bigint(' . (ref($try) || 'scalar') . ')';
-    my $val = Crypt::DH::_any2bigint($try);
-    ok($val, $type . ' returns a defined value');
-    is(ref($val), 'Math::BigInt', $type  . ' returns a Math::BigInt');
-    is($val->bstr, $num, $type . ' returns the correct value');
-}
-=cut
-
 for my $pg (@pgs) {
     my $dh1 = Crypt::DH::GMP->new(g => $pg->{g}, p => $pg->{p});
     my $dh2 = Crypt::DH::GMP->new(g => $pg->{g}, p => $pg->{p});

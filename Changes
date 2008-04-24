@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.00004 - 24 Apr 2008
+  - Add pub_key_twoc and compute_key_twoc to directly compute the two's
+    complement in binary form
+
 0.00004 - 23 Apr 2008
   - Fix an off-by-one error when calling mpz_get_str.
     This fixes segfaults that seemed to appear only on linux flavours.

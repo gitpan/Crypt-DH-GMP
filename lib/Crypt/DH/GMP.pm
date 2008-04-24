@@ -1,10 +1,10 @@
-# $Id: /mirror/coderepos/lang/perl/Crypt-DH-GMP/trunk/lib/Crypt/DH/GMP.pm 51832 2008-04-23T11:31:04.743764Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Crypt-DH-GMP/trunk/lib/Crypt/DH/GMP.pm 51934 2008-04-24T04:35:16.468056Z daisuke  $
 
 package Crypt::DH::GMP;
 use strict;
 use warnings;
 use vars qw($VERSION @ISA);
-$VERSION = '0.00004';
+$VERSION = '0.00005';
 
 eval {
     require XSLoader;
@@ -146,6 +146,16 @@ get going at 1am on this particular day
 =head2 pub_key
 
 =head2 priv_key
+
+=head2 compute_key_twoc
+
+Computes the key, and returns a string that is byte-padded two's compliment
+in binary form.
+
+=head2 pub_key_twoc
+
+Returns the pub_key as a string that is byte-padded two's compliment
+in binary form.
 
 =head1 AUTHOR
 
