@@ -1,6 +1,8 @@
 Changes
 dh_gmp.c
 dh_gmp.h
+GMP.bs
+GMP.c
 GMP.xs
 inc/Devel/CheckLib.pm
 lib/Crypt/DH/GMP.pm
