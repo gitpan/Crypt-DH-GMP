@@ -3,7 +3,7 @@ package Module::Install::XSUtil;
 
 use 5.005_03;
 
-$VERSION = '0.23_01';
+$VERSION = '0.24';
 
 use Module::Install::Base;
 @ISA     = qw(Module::Install::Base);
@@ -180,7 +180,6 @@ sub cc_append_to_inc{
     for my $dir(@dirs){
         unless(-d $dir){
             warn("'$dir' not found: $!\n");
-            exit;
         }
 
         _verbose "inc: -I$dir" if _VERBOSE;
@@ -198,19 +197,10 @@ sub cc_append_to_inc{
     return;
 }
 
-
 sub cc_libs {
-    goto &cc_append_to_libs;
-}
+    my ($self, @libs) = @_;
 
-sub cc_append_to_libs{
-    my($self, @libs) = @_;
-
-    $self->_xs_initialize();
-
-    my $mm = $self->makemaker_args;
-
-    my $libs = join q{ }, map{
+    @libs = map{
         my($name, $dir) = ref($_) eq 'ARRAY' ? @{$_} : ($_, undef);
         my $lib;
         if(defined $dir) {
@@ -223,6 +213,20 @@ sub cc_append_to_libs{
         _verbose "libs: $lib" if _VERBOSE;
         $lib;
     } @libs;
+
+    $self->cc_append_to_libs( @libs );
+}
+
+sub cc_append_to_libs{
+    my($self, @libs) = @_;
+
+    $self->_xs_initialize();
+
+    return unless @libs;
+
+    my $libs = join q{ }, @libs;
+
+    my $mm = $self->makemaker_args;
 
     if ($mm->{LIBS}){
         $mm->{LIBS} .= q{ } . $libs;
@@ -578,4 +582,4 @@ sub const_cccmd {
 1;
 __END__
 
-#line 770
+#line 774
