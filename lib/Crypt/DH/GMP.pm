@@ -1,8 +1,9 @@
 package Crypt::DH::GMP;
+use 5.0080001;
 use strict;
 use warnings;
 use vars qw($VERSION @ISA);
-$VERSION = '0.00010';
+$VERSION = '0.00011';
 
 eval {
     require XSLoader;
@@ -71,7 +72,7 @@ from a couple of problems:
 C<Crypt::DH> works with a plain C<Math::BigInt>, but if you want to use
 it in production, you almost always need to install C<Math::BigInt::GMP>
 or C<Math::BigInt::Pari> because without them, the computation that is
-required by C<Crypt::DH> makes the module prettu much unusable.
+required by C<Crypt::DH> makes the module pretty much unusable.
 
 Because of this, C<Crypt::DH> might as well make C<Math::BigInt::GMP> a
 hard requirement.
@@ -91,7 +92,7 @@ of this.
 These problems quickly become apparent when you use modules such as 
 C<Net::OpenID::Consumer>, which requires to make a few calls to C<Crypt::DH>.
 
-C<Crypt::DH::GMP> attemps to alleviate these problems by providing a 
+C<Crypt::DH::GMP> attempts to alleviate these problems by providing a 
 C<Crypt::DH>-compatible layer, which, instead of doing calculations via
 Math::BigInt, directly works with libgmp in C.
 
@@ -165,6 +166,8 @@ in binary form.
 
 Returns the pub_key as a string that is byte-padded two's compliment
 in binary form.
+
+=head2 clone
 
 =head1 AUTHOR
 

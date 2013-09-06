@@ -5,16 +5,17 @@ author:
 build_requires:
   Devel::CheckLib: 0.4
   Devel::PPPort: 3.19
-  ExtUtils::MakeMaker: 6.42
-  ExtUtils::ParseXS: 2.21
+  ExtUtils::MakeMaker: 6.59
   Test::More: 0
   Test::Requires: 0
 configure_requires:
   Devel::CheckLib: 0.4
   Devel::PPPort: 3.19
-  ExtUtils::MakeMaker: 6.42
+  ExtUtils::MakeMaker: 6.59
+  ExtUtils::ParseXS: 2.21
 distribution_type: module
-generated_by: 'Module::Install version 1.01'
+dynamic_config: 1
+generated_by: 'Module::Install version 1.06'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -27,6 +28,7 @@ no_index:
     - xt
 requires:
   XSLoader: 0.02
+  perl: 5.8.1
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.00010
+version: 0.00011

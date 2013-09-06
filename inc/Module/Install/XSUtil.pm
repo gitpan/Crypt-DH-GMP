@@ -3,7 +3,7 @@ package Module::Install::XSUtil;
 
 use 5.005_03;
 
-$VERSION = '0.37';
+$VERSION = '0.44';
 
 use Module::Install::Base;
 @ISA     = qw(Module::Install::Base);
@@ -18,11 +18,10 @@ use File::Find;
 use constant _VERBOSE => $ENV{MI_VERBOSE} ? 1 : 0;
 
 my %ConfigureRequires = (
-    # currently nothing
+    'ExtUtils::ParseXS' => 2.21,
 );
 
 my %BuildRequires = (
-    'ExtUtils::ParseXS' => 2.21, # the newer, the better
 );
 
 my %Requires = (
@@ -95,6 +94,7 @@ sub _is_msvc{
         ;
     }
 
+    # cf. https://github.com/sjn/toolchain-site/blob/219db464af9b2f19b04fec05547ac10180a469f3/lancaster-consensus.md
     my $want_xs;
     sub want_xs {
         my($self, $default) = @_;
@@ -105,13 +105,26 @@ sub _is_msvc{
         $default = !$ENV{PERL_ONLY} if not defined $default;
 
         foreach my $arg(@ARGV){
-            if($arg eq '--pp'){
+
+            my ($k, $v) = split '=', $arg; # MM-style named args
+            if ($k eq 'PUREPERL_ONLY' && defined $v) {
+                return $want_xs = !$v;
+            }
+            elsif($arg eq '--pp'){ # old-style
                 return $want_xs = 0;
             }
             elsif($arg eq '--xs'){
                 return $want_xs = 1;
             }
         }
+
+        if ($ENV{PERL_MM_OPT}) {
+            my($v) = $ENV{PERL_MM_OPT} =~ /\b PUREPERL_ONLY = (\S+) /xms;
+            if (defined $v) {
+                return $want_xs = !$v;
+            }
+        }
+
         return $want_xs = $default;
     }
 }
@@ -255,6 +268,17 @@ sub requires_c99 {
     return;
 }
 
+sub requires_cplusplus {
+    my($self) = @_;
+    if(!$self->cc_available) {
+        warn "This distribution requires a C++ compiler, but $Config{cc} seems not to support C++, stopped.\n";
+        exit;
+    }
+    $self->_xs_initialize();
+    $UseCplusplus = 1;
+    return;
+}
+
 sub cc_append_to_inc{
     my($self, @dirs) = @_;
 
@@ -373,7 +397,7 @@ sub cc_define{
     return;
 }
 
-sub requires_xs{
+sub requires_xs_module {
     my $self  = shift;
 
     return $self->requires() unless @_;
@@ -448,9 +472,10 @@ sub cc_src_paths{
         }
     }, @dirs);
 
+    my $xs_to = $UseCplusplus ? '.cpp' : '.c';
     foreach my $src_file(@src_files){
         my $c = $src_file;
-        if($c =~ s/ \.xs \z/.c/xms){
+        if($c =~ s/ \.xs \z/$xs_to/xms){
             $XS_ref->{$src_file} = $c;
 
             _verbose "xs: $src_file" if _VERBOSE;
@@ -565,7 +590,10 @@ sub _extract_functions_from_header_file{
             map{ qq{$add_include "$_"} } qw(EXTERN.h perl.h XSUB.h);
 
         my $cppcmd = qq{$Config{cpprun} $cppflags $h_file};
-
+        # remove all the -arch options to workaround gcc errors:
+        #       "-E, -S, -save-temps and -M options are not allowed
+        #        with multiple -arch flags"
+        $cppcmd =~ s/ -arch \s* \S+ //xmsg;
         _verbose("extract functions from: $cppcmd") if _VERBOSE;
         `$cppcmd`;
     };
@@ -743,7 +771,7 @@ package
     MY;
 
 # XXX: We must append to PM inside ExtUtils::MakeMaker->new().
-sub init_PM{
+sub init_PM {
     my $self = shift;
 
     $self->SUPER::init_PM(@_);
@@ -770,7 +798,22 @@ sub const_cccmd {
 
     return $cccmd
 }
+
+sub xs_c {
+    my($self) = @_;
+    my $mm = $self->SUPER::xs_c();
+    $mm =~ s/ \.c /.cpp/xmsg if $UseCplusplus;
+    return $mm;
+}
+
+sub xs_o {
+    my($self) = @_;
+    my $mm = $self->SUPER::xs_o();
+    $mm =~ s/ \.c /.cpp/xmsg if $UseCplusplus;
+    return $mm;
+}
+
 1;
 __END__
 
-#line 984
+#line 1030
